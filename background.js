@@ -1,7 +1,8 @@
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // NEXUS CAPTURE - Background Service Worker
 // Routes captures to Notion + NEXUS Backend
-// ═══════════════════════════════════════════════════════════════
+// Voice recording + TTS via ASTRA
+// ===============================================================
 
 const NEXUS_API = 'https://astra-command-center-sigma.vercel.app';
 
@@ -48,6 +49,13 @@ chrome.runtime.onInstalled.addListener(() => {
     contexts: ['selection']
   });
 
+  // TTS: Create Sound from highlighted text
+  chrome.contextMenus.create({
+    id: 'saturno-create-sound',
+    title: 'Create Sound (TTS)',
+    contexts: ['selection']
+  });
+
   // Set default settings
   chrome.storage.sync.get(['notionToken', 'notionDatabaseId', 'nexusEnabled', 'notionEnabled'], (result) => {
     if (result.nexusEnabled === undefined) {
@@ -63,6 +71,15 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'saturno-create-sound') {
+    // TTS: send selected text to content script for speech
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'createSound',
+      text: info.selectionText
+    }).catch(() => {});
+    return;
+  }
+
   if (info.menuItemId.startsWith('saturno-capture')) {
     const category = info.menuItemId.replace('saturno-capture-', '') || 'idea';
 
@@ -95,13 +112,13 @@ chrome.commands.onCommand.addListener((command) => {
   }
 });
 
-// Listen for messages from content script
+// Listen for messages from content script / popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'capture') {
     captureSelection(request.data).then(result => {
       sendResponse(result);
     });
-    return true; // Keep channel open for async response
+    return true;
   }
 
   if (request.action === 'getSettings') {
@@ -110,11 +127,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     return true;
   }
+
+  if (request.action === 'transcribeAudio') {
+    transcribeAudio(request.audioData).then(result => {
+      sendResponse(result);
+    }).catch(e => {
+      sendResponse({ ok: false, error: e.message });
+    });
+    return true;
+  }
 });
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 // CAPTURE LOGIC
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 async function captureSelection(data) {
   const settings = await chrome.storage.sync.get(['notionToken', 'notionDatabaseId', 'nexusEnabled', 'notionEnabled']);
@@ -135,7 +161,6 @@ async function captureSelection(data) {
     notion: null
   };
 
-  // Send to NEXUS
   if (settings.nexusEnabled !== false) {
     try {
       results.nexus = await sendToNexus(capture);
@@ -144,7 +169,6 @@ async function captureSelection(data) {
     }
   }
 
-  // Send to Notion
   if (settings.notionEnabled !== false && settings.notionToken && settings.notionDatabaseId) {
     try {
       results.notion = await sendToNotion(capture, settings);
@@ -153,10 +177,7 @@ async function captureSelection(data) {
     }
   }
 
-  // Store locally as backup
   await storeLocally(capture);
-
-  // Notify content script
   notifyCapture(capture, results);
 
   return results;
@@ -165,9 +186,7 @@ async function captureSelection(data) {
 async function sendToNexus(capture) {
   const response = await fetch(`${NEXUS_API}/api/capture`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(capture)
   });
 
@@ -223,31 +242,53 @@ async function storeLocally(capture) {
   const result = await chrome.storage.local.get(['captures']);
   const captures = result.captures || [];
   captures.unshift(capture);
-
-  // Keep last 1000 captures
-  if (captures.length > 1000) {
-    captures.splice(1000);
-  }
-
+  if (captures.length > 1000) captures.splice(1000);
   await chrome.storage.local.set({ captures });
 }
 
 function notifyCapture(capture, results) {
-  // Send notification to all tabs
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach(tab => {
       chrome.tabs.sendMessage(tab.id, {
         action: 'captureComplete',
         capture: capture,
         results: results
-      }).catch(() => {}); // Ignore errors for tabs without content script
+      }).catch(() => {});
     });
   });
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
+// VOICE TRANSCRIPTION (via ASTRA /api/transcribe)
+// ===============================================================
+
+async function transcribeAudio(base64Audio) {
+  // Convert base64 back to blob
+  const binaryStr = atob(base64Audio);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+  const blob = new Blob([bytes], { type: 'audio/webm' });
+
+  const fd = new FormData();
+  fd.append('audio', blob, 'recording.webm');
+
+  const res = await fetch(`${NEXUS_API}/api/transcribe`, {
+    method: 'POST',
+    body: fd
+  });
+
+  if (!res.ok) {
+    throw new Error(`Transcribe API error: ${res.status}`);
+  }
+
+  return await res.json();
+}
+
+// ===============================================================
 // UTILITIES
-// ═══════════════════════════════════════════════════════════════
+// ===============================================================
 
 function truncate(str, length) {
   if (!str) return '';

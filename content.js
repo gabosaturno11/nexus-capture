@@ -339,10 +339,36 @@
     }
 
     if (request.action === 'captureComplete') {
-      // Could show a notification on the page
       console.log('Capture complete:', request.capture);
     }
+
+    if (request.action === 'createSound') {
+      createSoundFromText(request.text);
+    }
   });
+
+  // TTS: Create Sound from text using browser speechSynthesis
+  function createSoundFromText(text) {
+    if (!text) { showQuickToast('No text to speak'); return; }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+
+    // Try to use a good voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Alex'));
+    if (preferred) utterance.voice = preferred;
+
+    utterance.onstart = () => showQuickToast('Speaking...');
+    utterance.onend = () => showQuickToast('Done');
+    utterance.onerror = () => showQuickToast('TTS error');
+
+    window.speechSynthesis.speak(utterance);
+  }
 
   // ═══════════════════════════════════════════════════════════════
   // HIGHLIGHT PERSISTENCE - Visual highlights on page
