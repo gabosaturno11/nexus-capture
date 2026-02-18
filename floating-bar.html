@@ -38,9 +38,10 @@
   .logo { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; }
   .logo span { color: var(--cyan); }
   .status { font-size: 8px; color: var(--green); }
-  .actions { display: flex; gap: 6px; }
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
   .btn {
     flex: 1;
+    min-width: 50px;
     padding: 10px 8px;
     font-size: 9px;
     font-family: inherit;
@@ -59,6 +60,7 @@
   }
   .btn:hover { border-color: var(--cyan); color: var(--cyan); }
   .btn.active { border-color: var(--red); color: var(--red); }
+  .btn.pipeline-active { border-color: var(--purple); color: var(--purple); }
   .btn-icon { font-size: 16px; }
   .panel {
     display: none;
@@ -68,19 +70,18 @@
   }
   .panel.open { display: block; }
   .panel-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); margin-bottom: 8px; }
-  textarea {
+  textarea, input[type="text"] {
     width: 100%;
-    min-height: 80px;
     background: var(--bg);
     border: 1px solid var(--border);
     color: var(--text);
     font-family: inherit;
     font-size: 11px;
     padding: 10px;
-    resize: vertical;
     outline: none;
   }
-  textarea:focus { border-color: var(--cyan); }
+  textarea { min-height: 80px; resize: vertical; }
+  textarea:focus, input[type="text"]:focus { border-color: var(--cyan); }
   .send-btn {
     width: 100%;
     padding: 10px;
@@ -96,6 +97,9 @@
     cursor: pointer;
   }
   .send-btn:hover { background: #fff; }
+  .send-btn.purple { background: var(--purple); }
+  .send-btn.purple:hover { background: #c084fc; }
+  .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .recording-indicator {
     display: none;
     align-items: center;
@@ -132,6 +136,52 @@
     padding: 6px 12px; font-size: 9px; transition: transform 0.2s; z-index: 100;
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
+  select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 10px;
+  }
+  .result-box {
+    padding: 10px;
+    background: var(--bg);
+    border: 1px solid var(--purple);
+    font-size: 11px;
+    color: var(--text);
+    margin-top: 8px;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .mini-btn {
+    padding: 4px 8px;
+    font-size: 8px;
+    font-family: inherit;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .mini-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .upload-label {
+    display: block;
+    padding: 8px;
+    margin-top: 8px;
+    text-align: center;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .upload-label:hover { border-color: var(--purple); color: var(--purple); }
 </style>
 </head>
 <body>
@@ -154,6 +204,10 @@
       <span class="btn-icon">S</span>
       Sound
     </button>
+    <button class="btn" id="pipeline-btn" onclick="togglePipeline()" title="Pipeline: Audio/Text + Prompt">
+      <span class="btn-icon">P</span>
+      Pipeline
+    </button>
     <button class="btn" onclick="openAstra()" title="Open ASTRA Hub">
       <span class="btn-icon">A</span>
       ASTRA
@@ -173,7 +227,7 @@
   <div class="panel" id="capture-panel">
     <div class="panel-title">Manual Capture</div>
     <textarea id="capture-text" placeholder="Paste or type text to capture..."></textarea>
-    <select id="capture-cat" style="width:100%;padding:8px;margin-top:8px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:10px;">
+    <select id="capture-cat">
       <option value="idea">Idea</option>
       <option value="quote">Quote</option>
       <option value="insight">Insight</option>
@@ -184,6 +238,50 @@
     </select>
     <button class="send-btn" onclick="sendCapture()">Send to ASTRA</button>
   </div>
+
+  <div class="panel" id="pipeline-panel">
+    <div class="panel-title">Pipeline: Audio/Text + Prompt -> GPT</div>
+
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <button class="mini-btn" id="pl-rec-btn" onclick="plRecord()">Record</button>
+      <label class="mini-btn" style="cursor:pointer">
+        Upload
+        <input type="file" accept="audio/*" onchange="plUpload(this)" style="display:none">
+      </label>
+      <button class="mini-btn" onclick="plPaste()">Paste Text</button>
+    </div>
+
+    <div id="pl-rec-indicator" style="display:none;padding:6px 8px;background:rgba(239,68,68,0.1);border:1px solid var(--red);font-size:9px;color:var(--red);margin-bottom:8px;display:none;align-items:center;gap:6px">
+      <div class="rec-dot"></div>
+      <span id="pl-rec-time">0s</span>
+    </div>
+
+    <div id="pl-preview" style="display:none;padding:6px 8px;background:var(--bg);border:1px solid var(--border);font-size:9px;color:var(--muted);margin-bottom:8px;max-height:60px;overflow-y:auto"></div>
+
+    <textarea id="pl-prompt" placeholder="What should the pipeline do? e.g. Summarize, extract action items, rewrite for social media..." style="min-height:50px"></textarea>
+
+    <select id="pl-source" style="margin-top:4px">
+      <option value="pipeline-manual">Manual</option>
+      <option value="pipeline-whatsapp">WhatsApp</option>
+      <option value="pipeline-voice">Voice Memo</option>
+      <option value="pipeline-capture">Capture</option>
+    </select>
+
+    <button class="send-btn purple" id="pl-process-btn" onclick="plProcess()">Process Pipeline</button>
+
+    <div id="pl-result" style="display:none">
+      <div id="pl-transcript-section" style="display:none">
+        <div style="font-size:8px;text-transform:uppercase;letter-spacing:0.06em;color:var(--dim);margin-top:8px;margin-bottom:4px">Transcript</div>
+        <div class="transcript" id="pl-transcript" style="max-height:80px"></div>
+      </div>
+      <div style="font-size:8px;text-transform:uppercase;letter-spacing:0.06em;color:var(--purple);margin-top:8px;margin-bottom:4px">Result</div>
+      <div class="result-box" id="pl-synthesis"></div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="mini-btn" onclick="plCopy()">Copy</button>
+        <button class="mini-btn" onclick="plSave()">Save to ASTRA</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -191,6 +289,8 @@
 <script>
 const API = 'https://astra-command-center-sigma.vercel.app';
 let mediaRecorder = null, audioChunks = [], voiceActive = false, recStart = 0, recTimer = null;
+let plRecorder = null, plChunks = [], plRecording = false, plRecStart = 0, plRecTimer = null;
+let plAudioBlob = null, plTextInput = '';
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -249,7 +349,6 @@ async function toggleVoice() {
         const data = await res.json();
         if (data.ok && data.text) {
           document.getElementById('transcript').textContent = data.text;
-          // Auto-copy to clipboard
           await navigator.clipboard.writeText(data.text);
           toast('Transcribed + copied!');
         } else {
@@ -306,6 +405,145 @@ async function sendCapture() {
   } catch(e) { toast('Error: ' + e.message); }
 }
 
+function togglePipeline() {
+  const panel = document.getElementById('pipeline-panel');
+  const btn = document.getElementById('pipeline-btn');
+  const isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
+  if (!isOpen) {
+    panel.classList.add('open');
+    btn.classList.add('pipeline-active');
+  } else {
+    btn.classList.remove('pipeline-active');
+  }
+}
+
+function plRecord() {
+  const btn = document.getElementById('pl-rec-btn');
+  const indicator = document.getElementById('pl-rec-indicator');
+
+  if (plRecording && plRecorder && plRecorder.state === 'recording') {
+    plRecorder.stop();
+    plRecording = false;
+    btn.textContent = 'Record';
+    indicator.style.display = 'none';
+    clearInterval(plRecTimer);
+    toast('Audio ready');
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    plChunks = [];
+    plRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    plRecorder.ondataavailable = e => { if(e.data.size > 0) plChunks.push(e.data); };
+    plRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      plAudioBlob = new Blob(plChunks, { type: 'audio/webm' });
+      plTextInput = '';
+      const preview = document.getElementById('pl-preview');
+      preview.style.display = 'block';
+      preview.textContent = 'Audio: ' + Math.round(plAudioBlob.size / 1024) + 'KB recorded';
+    };
+    plRecorder.start();
+    plRecording = true;
+    btn.textContent = 'Stop';
+    indicator.style.display = 'flex';
+    plRecStart = Date.now();
+    plRecTimer = setInterval(() => {
+      document.getElementById('pl-rec-time').textContent = Math.floor((Date.now() - plRecStart) / 1000) + 's';
+    }, 1000);
+    toast('Recording for pipeline...');
+  }).catch(() => toast('Mic denied'));
+}
+
+function plUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  plAudioBlob = file;
+  plTextInput = '';
+  const preview = document.getElementById('pl-preview');
+  preview.style.display = 'block';
+  preview.textContent = 'File: ' + file.name + ' (' + Math.round(file.size / 1024) + 'KB)';
+  toast('Audio loaded');
+  input.value = '';
+}
+
+function plPaste() {
+  navigator.clipboard.readText().then(text => {
+    if (!text) { toast('Clipboard empty'); return; }
+    plAudioBlob = null;
+    plTextInput = text;
+    const preview = document.getElementById('pl-preview');
+    preview.style.display = 'block';
+    preview.textContent = text.length > 200 ? text.substring(0, 200) + '...' : text;
+    toast('Text pasted');
+  }).catch(() => toast('Cannot read clipboard'));
+}
+
+async function plProcess() {
+  const prompt = document.getElementById('pl-prompt').value.trim();
+  if (!prompt) { toast('Enter a prompt'); return; }
+  if (!plAudioBlob && !plTextInput) { toast('Record, upload, or paste first'); return; }
+
+  const btn = document.getElementById('pl-process-btn');
+  btn.textContent = 'Processing...';
+  btn.disabled = true;
+
+  try {
+    const source = document.getElementById('pl-source').value;
+    let res;
+    if (plAudioBlob) {
+      const fd = new FormData();
+      fd.append('audio', plAudioBlob, plAudioBlob.name || 'recording.webm');
+      fd.append('prompt', prompt);
+      fd.append('source', source);
+      res = await fetch(API + '/api/pipeline', { method: 'POST', body: fd });
+    } else {
+      res = await fetch(API + '/api/pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: plTextInput, prompt: prompt, source: source })
+      });
+    }
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('pl-result').style.display = 'block';
+      if (data.inputType === 'audio' && data.transcript) {
+        document.getElementById('pl-transcript-section').style.display = 'block';
+        document.getElementById('pl-transcript').textContent = data.transcript;
+      } else {
+        document.getElementById('pl-transcript-section').style.display = 'none';
+      }
+      document.getElementById('pl-synthesis').textContent = data.synthesis;
+      toast('Pipeline complete!');
+    } else {
+      toast('Error: ' + (data.error || 'unknown'));
+    }
+  } catch(e) {
+    toast('Pipeline error: ' + e.message);
+  } finally {
+    btn.textContent = 'Process Pipeline';
+    btn.disabled = false;
+  }
+}
+
+function plCopy() {
+  const text = document.getElementById('pl-synthesis').textContent;
+  navigator.clipboard.writeText(text).then(() => toast('Copied!')).catch(() => toast('Copy failed'));
+}
+
+function plSave() {
+  const text = document.getElementById('pl-synthesis').textContent;
+  fetch(API + '/api/capture', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content: text, category: 'pipeline', source: 'nexus-pipeline', sourceTitle: 'Pipeline Result', type: 'synthesis', tags: ['pipeline'] })
+  }).then(r => r.json()).then(d => {
+    if (d.ok) toast('Saved to ASTRA!');
+    else toast('Save error');
+  }).catch(() => toast('Save failed'));
+}
+
 function openAstra() {
   window.open('https://astra-command-center-sigma.vercel.app', '_blank');
 }
@@ -313,7 +551,7 @@ function openAstra() {
 // Load voices
 speechSynthesis.getVoices();
 
-// ASTRA Connector — pings ASTRA backend to register nexus-capture
+// ASTRA Connector
 (function(){
   fetch(API+'/api/repos',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({repoId:'nexus-capture',status:'online',message:'NEXUS floating bar loaded'})
