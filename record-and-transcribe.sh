@@ -12,7 +12,7 @@ LOG_FLAG=""
 [ "$2" = "--log" ] && LOG_FLAG="--log"
 [ "$3" = "--log" ] && LOG_FLAG="--log"
 
-OUTPUT_DIR="$HOME/dev/saturno-capture/recordings"
+OUTPUT_DIR="$HOME/dev/nexus-capture/recordings"
 mkdir -p "$OUTPUT_DIR"
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -34,7 +34,7 @@ if [ -f "$AUDIO_FILE" ]; then
   echo "Recorded: $AUDIO_FILE"
   echo ""
   # Transcribe
-  "$HOME/dev/saturno-capture/whisper-transcribe.sh" "$AUDIO_FILE" --model base $LOG_FLAG
+  "$HOME/dev/nexus-capture/whisper-transcribe.sh" "$AUDIO_FILE" --model base $LOG_FLAG
 else
   echo "Recording failed"
   exit 1

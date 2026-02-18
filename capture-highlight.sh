@@ -1,5 +1,5 @@
 #!/bin/bash
-# SATURNO CAPTURE — System-wide highlight capture
+# NEXUS CAPTURE — System-wide highlight capture
 # Grabs selected text (or clipboard) and sends to ASTRA capture API
 #
 # Usage:
@@ -13,7 +13,7 @@
 ASTRA_API="https://astra-command-center-sigma.vercel.app"
 ADMIN_PW="${ASTRA_ADMIN_PASSWORD:-saturno-admin-2026}"
 CATEGORY="${SATURNO_CATEGORY:-highlight}"
-LOG_FILE="$HOME/dev/saturno-capture/capture.log"
+LOG_FILE="$HOME/dev/nexus-capture/capture.log"
 
 # Get text from argument, stdin, or clipboard
 if [ -n "$1" ]; then
@@ -25,7 +25,7 @@ else
 fi
 
 if [ -z "$TEXT" ]; then
-  osascript -e 'display notification "Nothing to capture" with title "SATURNO CAPTURE"' 2>/dev/null
+  osascript -e 'display notification "Nothing to capture" with title "NEXUS CAPTURE"' 2>/dev/null
   exit 1
 fi
 
@@ -61,6 +61,6 @@ if [ "$HTTP_CODE" = "200" ]; then
   osascript -e "display notification \"$PREVIEW\" with title \"Captured from $SOURCE_APP\"" 2>/dev/null
 else
   # Fallback: save locally
-  echo "$TEXT" >> "$HOME/dev/saturno-capture/offline-captures.txt"
-  osascript -e "display notification \"Saved locally (API: $HTTP_CODE)\" with title \"SATURNO CAPTURE\"" 2>/dev/null
+  echo "$TEXT" >> "$HOME/dev/nexus-capture/offline-captures.txt"
+  osascript -e "display notification \"Saved locally (API: $HTTP_CODE)\" with title \"NEXUS CAPTURE\"" 2>/dev/null
 fi
