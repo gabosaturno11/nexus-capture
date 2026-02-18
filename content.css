@@ -1,0 +1,343 @@
+/* ═══════════════════════════════════════════════════════════════
+   SATURNO CAPTURE - Content Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* Floating Button */
+#saturno-capture-btn {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+#saturno-capture-btn .saturno-capture-icon {
+  color: #00ffcc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal */
+#saturno-capture-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483647 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.saturno-modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.saturno-modal-content {
+  position: relative;
+  width: 480px;
+  max-width: 90vw;
+  max-height: 90vh;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 255, 204, 0.1);
+  overflow: hidden;
+}
+
+.saturno-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #050505;
+}
+
+.saturno-modal-logo {
+  font-size: 12px;
+  font-weight: 700;
+  color: #00ffcc;
+  letter-spacing: 0.1em;
+}
+
+.saturno-modal-close {
+  background: none;
+  border: none;
+  color: #71717a;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.saturno-modal-close:hover {
+  color: #ef4444;
+}
+
+.saturno-modal-body {
+  padding: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.saturno-field {
+  margin-bottom: 20px;
+}
+
+.saturno-label {
+  display: block;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #3f3f46;
+  margin-bottom: 8px;
+}
+
+.saturno-preview {
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px;
+  font-size: 13px;
+  color: #e4e4e7;
+  line-height: 1.6;
+  max-height: 150px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Color Grid - Clasp Style */
+.saturno-color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.saturno-color-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  font-family: inherit;
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.saturno-color-btn:hover {
+  border-color: var(--cat-color);
+  transform: translateY(-2px);
+}
+
+.saturno-color-btn.active {
+  border-color: var(--cat-color);
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.3), inset 0 0 0 1px var(--cat-color);
+}
+
+.saturno-color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--cat-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s;
+}
+
+.saturno-color-btn:hover .saturno-color-dot,
+.saturno-color-btn.active .saturno-color-dot {
+  transform: scale(1.15);
+  box-shadow: 0 0 12px var(--cat-color);
+}
+
+.saturno-color-label {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #71717a;
+}
+
+.saturno-color-btn.active .saturno-color-label {
+  color: var(--cat-color);
+}
+
+/* Legacy category buttons for backwards compatibility */
+.saturno-categories {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.saturno-cat {
+  padding: 8px 16px;
+  font-size: 10px;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #71717a;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.saturno-cat:hover {
+  border-color: #00ffcc;
+  color: #00ffcc;
+}
+
+.saturno-cat.active {
+  background: #00ffcc;
+  color: #0a0a0a;
+  border-color: #00ffcc;
+}
+
+.saturno-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 12px;
+  font-family: inherit;
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e4e4e7;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.saturno-input:focus {
+  border-color: #00ffcc;
+}
+
+.saturno-input::placeholder {
+  color: #3f3f46;
+}
+
+.saturno-destinations {
+  display: flex;
+  gap: 24px;
+}
+
+.saturno-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #71717a;
+  cursor: pointer;
+}
+
+.saturno-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #00ffcc;
+  cursor: pointer;
+}
+
+.saturno-checkbox input:disabled + span {
+  color: #3f3f46;
+}
+
+.saturno-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: #050505;
+}
+
+.saturno-btn {
+  padding: 10px 20px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.saturno-btn-secondary {
+  background: transparent;
+  color: #71717a;
+}
+
+.saturno-btn-secondary:hover {
+  border-color: #71717a;
+  color: #e4e4e7;
+}
+
+.saturno-btn-primary {
+  background: #00ffcc;
+  color: #0a0a0a;
+  border-color: #00ffcc;
+}
+
+.saturno-btn-primary:hover {
+  background: #fff;
+}
+
+.saturno-btn-primary:disabled {
+  background: #3f3f46;
+  border-color: #3f3f46;
+  cursor: not-allowed;
+}
+
+/* Toast */
+.saturno-toast {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 12px 24px;
+  background: #0d0d0d;
+  border: 1px solid #22c55e;
+  color: #22c55e;
+  font-size: 11px;
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+}
+
+.saturno-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.saturno-toast.error {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* Scrollbar */
+.saturno-modal-body::-webkit-scrollbar,
+.saturno-preview::-webkit-scrollbar {
+  width: 6px;
+}
+
+.saturno-modal-body::-webkit-scrollbar-track,
+.saturno-preview::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+.saturno-modal-body::-webkit-scrollbar-thumb,
+.saturno-preview::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.saturno-modal-body::-webkit-scrollbar-thumb:hover,
+.saturno-preview::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

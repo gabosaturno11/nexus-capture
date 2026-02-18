@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generate SATURNO CAPTURE Icons</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #0a0a0a; color: #e4e4e7; }
+    canvas { display: block; margin: 10px 0; border: 1px solid #333; }
+    .row { display: flex; gap: 20px; align-items: center; margin: 20px 0; }
+    a { color: #00ffcc; }
+  </style>
+</head>
+<body>
+  <h1>SATURNO CAPTURE Icons</h1>
+  <p>Right-click each canvas and "Save image as..." with the correct filename:</p>
+
+  <div class="row">
+    <div>
+      <p>icon16.png</p>
+      <canvas id="icon16" width="16" height="16"></canvas>
+    </div>
+    <div>
+      <p>icon32.png</p>
+      <canvas id="icon32" width="32" height="32"></canvas>
+    </div>
+    <div>
+      <p>icon48.png</p>
+      <canvas id="icon48" width="48" height="48"></canvas>
+    </div>
+    <div>
+      <p>icon128.png</p>
+      <canvas id="icon128" width="128" height="128"></canvas>
+    </div>
+  </div>
+
+  <script>
+    const sizes = [16, 32, 48, 128];
+
+    sizes.forEach(size => {
+      const canvas = document.getElementById('icon' + size);
+      const ctx = canvas.getContext('2d');
+
+      // Background
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, size, size);
+
+      // Border
+      ctx.strokeStyle = '#00ffcc';
+      ctx.lineWidth = size / 16;
+      ctx.strokeRect(size * 0.1, size * 0.1, size * 0.8, size * 0.8);
+
+      // Plus sign
+      ctx.strokeStyle = '#00ffcc';
+      ctx.lineWidth = size / 8;
+      ctx.lineCap = 'round';
+
+      // Horizontal line
+      ctx.beginPath();
+      ctx.moveTo(size * 0.3, size * 0.5);
+      ctx.lineTo(size * 0.7, size * 0.5);
+      ctx.stroke();
+
+      // Vertical line
+      ctx.beginPath();
+      ctx.moveTo(size * 0.5, size * 0.3);
+      ctx.lineTo(size * 0.5, size * 0.7);
+      ctx.stroke();
+    });
+  </script>
+</body>
+</html>

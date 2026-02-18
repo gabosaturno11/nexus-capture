@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS CAPTURE</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #050505;
+      --bg-card: #0d0d0d;
+      --border: rgba(255,255,255,0.08);
+      --accent-cyan: #00ffcc;
+      --accent-gold: #d4af37;
+      --accent-purple: #a855f7;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-blue: #3b82f6;
+      --accent-orange: #f97316;
+      --accent-pink: #ec4899;
+      --text-primary: #e4e4e7;
+      --text-secondary: #71717a;
+      --text-muted: #3f3f46;
+    }
+
+    body {
+      width: 320px;
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .header {
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+
+    .logo span { color: var(--accent-cyan); }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
+    .status-dot.offline { background: var(--accent-red); }
+
+    .section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat {
+      text-align: center;
+      padding: 12px 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    .stat-label {
+      font-size: 8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field:last-child { margin-bottom: 0; }
+
+    .field-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 11px;
+      font-family: inherit;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .field-input:focus { border-color: var(--accent-cyan); }
+    .field-input::placeholder { color: var(--text-muted); }
+
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+    }
+
+    .toggle-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 12px;
+      height: 12px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .toggle.active {
+      background: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+    }
+
+    .toggle.active::after {
+      left: 19px;
+      background: var(--bg-primary);
+    }
+
+    .recent-list {
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .recent-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .recent-item:hover { border-color: var(--accent-cyan); }
+    .recent-item:last-child { margin-bottom: 0; }
+
+    .recent-color {
+      width: 4px;
+      height: 100%;
+      min-height: 30px;
+      border-radius: 2px;
+    }
+
+    .recent-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .recent-text {
+      font-size: 10px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .recent-meta {
+      font-size: 8px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 10px;
+      font-family: inherit;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: var(--accent-cyan);
+      border: none;
+      color: var(--bg-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover { background: #fff; }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .footer {
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .footer .btn { flex: 1; }
+
+    .empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+
+    /* Colors for categories */
+    .color-idea { background: var(--accent-cyan); }
+    .color-quote { background: var(--accent-gold); }
+    .color-code { background: var(--accent-purple); }
+    .color-insight { background: var(--accent-green); }
+    .color-todo { background: var(--accent-red); }
+    .color-book { background: var(--accent-blue); }
+    .color-research { background: var(--accent-orange); }
+    .color-other { background: var(--accent-pink); }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">SATURNO <span>CAPTURE</span></div>
+    <div class="status">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Checking...</span>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="section-title">Today's Captures</div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="stat-today">0</div>
+        <div class="stat-label">Today</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-week">0</div>
+        <div class="stat-label">This Week</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Destinations</div>
+    <div class="toggle-row">
+      <span class="toggle-label">Send to NEXUS</span>
+      <div class="toggle active" id="toggle-nexus" data-key="nexusEnabled"></div>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">Send to Notion</span>
+      <div class="toggle" id="toggle-notion" data-key="notionEnabled"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Notion Settings</div>
+    <div class="field">
+      <div class="field-label">API Token</div>
+      <input type="password" class="field-input" id="notion-token" placeholder="secret_xxx...">
+    </div>
+    <div class="field">
+      <div class="field-label">Database ID</div>
+      <input type="text" class="field-input" id="notion-db" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Recent Captures</div>
+    <div class="recent-list" id="recent-list">
+      <div class="empty">No captures yet</div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <button class="btn btn-secondary" id="btn-export">Export</button>
+    <button class="btn" id="btn-open-nexus">Open NEXUS</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
