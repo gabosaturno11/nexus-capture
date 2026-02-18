@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #050505;
+    --border: rgba(255,255,255,0.08);
+    --cyan: #00ffcc;
+    --red: #ef4444;
+    --green: #22c55e;
+    --purple: #a855f7;
+    --gold: #d4af37;
+    --text: #e4e4e7;
+    --muted: #71717a;
+    --dim: #3f3f46;
+  }
+  body { font-family: 'JetBrains Mono', monospace; background: var(--bg); color: var(--text); }
+  .bar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    min-width: 280px;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; }
+  .logo span { color: var(--cyan); }
+  .status { font-size: 8px; color: var(--green); }
+  .actions { display: flex; gap: 6px; }
+  .btn {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 9px;
+    font-family: inherit;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .btn.active { border-color: var(--red); color: var(--red); }
+  .btn-icon { font-size: 16px; }
+  .panel {
+    display: none;
+    padding: 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+  }
+  .panel.open { display: block; }
+  .panel-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); margin-bottom: 8px; }
+  textarea {
+    width: 100%;
+    min-height: 80px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 11px;
+    padding: 10px;
+    resize: vertical;
+    outline: none;
+  }
+  textarea:focus { border-color: var(--cyan); }
+  .send-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    font-size: 10px;
+    font-family: inherit;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--cyan);
+    border: none;
+    color: var(--bg);
+    cursor: pointer;
+  }
+  .send-btn:hover { background: #fff; }
+  .recording-indicator {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--red);
+    font-size: 10px;
+    color: var(--red);
+  }
+  .recording-indicator.show { display: flex; }
+  .rec-dot {
+    width: 8px; height: 8px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .transcript {
+    padding: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text);
+    min-height: 40px;
+    margin-top: 8px;
+    white-space: pre-wrap;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+  .toast {
+    position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%) translateY(50px);
+    background: var(--bg2); border: 1px solid var(--cyan); color: var(--cyan);
+    padding: 6px 12px; font-size: 9px; transition: transform 0.2s; z-index: 100;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="header">
+    <div class="logo">NEXUS <span>CAPTURE</span></div>
+    <div class="status" id="status">Ready</div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" onclick="captureClipboard()" title="Capture clipboard to ASTRA">
+      <span class="btn-icon">+</span>
+      Capture
+    </button>
+    <button class="btn" id="voice-btn" onclick="toggleVoice()" title="Record voice (Whisper)">
+      <span class="btn-icon">M</span>
+      Voice
+    </button>
+    <button class="btn" onclick="createSound()" title="Speak clipboard text">
+      <span class="btn-icon">S</span>
+      Sound
+    </button>
+    <button class="btn" onclick="openAstra()" title="Open ASTRA Hub">
+      <span class="btn-icon">A</span>
+      ASTRA
+    </button>
+  </div>
+
+  <div class="recording-indicator" id="rec-indicator">
+    <div class="rec-dot"></div>
+    <span id="rec-time">Recording... 0s</span>
+  </div>
+
+  <div class="panel" id="voice-panel">
+    <div class="panel-title">Whisper Transcription</div>
+    <div class="transcript" id="transcript">Click Voice to start recording. Click again to stop and transcribe.</div>
+  </div>
+
+  <div class="panel" id="capture-panel">
+    <div class="panel-title">Manual Capture</div>
+    <textarea id="capture-text" placeholder="Paste or type text to capture..."></textarea>
+    <select id="capture-cat" style="width:100%;padding:8px;margin-top:8px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:10px;">
+      <option value="idea">Idea</option>
+      <option value="quote">Quote</option>
+      <option value="insight">Insight</option>
+      <option value="code">Code</option>
+      <option value="todo">To-Do</option>
+      <option value="book">Book</option>
+      <option value="research">Research</option>
+    </select>
+    <button class="send-btn" onclick="sendCapture()">Send to ASTRA</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://astra-command-center-sigma.vercel.app';
+let mediaRecorder = null, audioChunks = [], voiceActive = false, recStart = 0, recTimer = null;
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+async function captureClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (!text) { toast('Clipboard empty'); return; }
+    const res = await fetch(API + '/api/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text, category: 'highlight', source: 'nexus-floating-bar', sourceTitle: 'Clipboard Capture', type: 'highlight', tags: ['clipboard'] })
+    });
+    const data = await res.json();
+    if (data.ok) toast('Captured: ' + text.substring(0, 40) + '...');
+    else toast('Error: ' + (data.error || 'unknown'));
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+async function toggleVoice() {
+  const btn = document.getElementById('voice-btn');
+  const panel = document.getElementById('voice-panel');
+  const indicator = document.getElementById('rec-indicator');
+
+  if (voiceActive && mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    voiceActive = false;
+    btn.classList.remove('active');
+    indicator.classList.remove('show');
+    clearInterval(recTimer);
+    document.getElementById('transcript').textContent = 'Transcribing with Whisper...';
+    toast('Processing...');
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+    mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
+
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      if (blob.size < 100) { toast('Too short'); return; }
+
+      try {
+        const fd = new FormData();
+        fd.append('audio', blob, 'recording.webm');
+        const res = await fetch(API + '/api/transcribe', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.ok && data.text) {
+          document.getElementById('transcript').textContent = data.text;
+          // Auto-copy to clipboard
+          await navigator.clipboard.writeText(data.text);
+          toast('Transcribed + copied!');
+        } else {
+          document.getElementById('transcript').textContent = 'Error: ' + (data.error || 'unknown');
+          toast('Transcription failed');
+        }
+      } catch(e) {
+        document.getElementById('transcript').textContent = 'Error: ' + e.message;
+        toast('Whisper error');
+      }
+    };
+
+    mediaRecorder.start();
+    voiceActive = true;
+    btn.classList.add('active');
+    panel.classList.add('open');
+    indicator.classList.add('show');
+    recStart = Date.now();
+    recTimer = setInterval(() => {
+      const s = Math.floor((Date.now() - recStart) / 1000);
+      document.getElementById('rec-time').textContent = 'Recording... ' + s + 's';
+    }, 1000);
+    toast('Recording...');
+  } catch(e) { toast('Mic access denied'); }
+}
+
+function createSound() {
+  navigator.clipboard.readText().then(text => {
+    if (!text) { toast('Clipboard empty'); return; }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    const voices = speechSynthesis.getVoices();
+    const pref = voices.find(v => v.name.includes('Samantha') || v.name.includes('Daniel'));
+    if (pref) utterance.voice = pref;
+    utterance.onstart = () => toast('Speaking...');
+    utterance.onend = () => toast('Done');
+    speechSynthesis.speak(utterance);
+  }).catch(() => toast('Cannot read clipboard'));
+}
+
+async function sendCapture() {
+  const text = document.getElementById('capture-text').value.trim();
+  const cat = document.getElementById('capture-cat').value;
+  if (!text) { toast('Enter text first'); return; }
+  try {
+    const res = await fetch(API + '/api/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text, category: cat, source: 'nexus-floating-bar', sourceTitle: 'Manual Capture', type: 'highlight', tags: ['manual'] })
+    });
+    const data = await res.json();
+    if (data.ok) { toast('Sent to ASTRA!'); document.getElementById('capture-text').value = ''; }
+    else toast('Error: ' + (data.error || 'unknown'));
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+function openAstra() {
+  window.open('https://astra-command-center-sigma.vercel.app', '_blank');
+}
+
+// Load voices
+speechSynthesis.getVoices();
+</script>
+</body>
+</html>
