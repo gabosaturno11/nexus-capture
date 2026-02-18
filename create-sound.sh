@@ -24,7 +24,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Get text from argument or clipboard
+# Get text from argument, stdin (Services menu), or clipboard
+if [ -z "$TEXT" ]; then
+  # Check if stdin has data (from macOS Services/Quick Action)
+  if [ ! -t 0 ]; then
+    TEXT=$(cat)
+  fi
+fi
+
 if [ -z "$TEXT" ]; then
   TEXT=$(pbpaste)
 fi
