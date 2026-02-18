@@ -64,6 +64,16 @@
   function showFloatingButton(x, y) {
     if (!floatingButton) createFloatingButton();
 
+    // Store selection NOW (before click deselects it)
+    const selection = window.getSelection();
+    const text = selection.toString().trim();
+    if (text) {
+      lastSelection = text;
+      if (selection.rangeCount > 0) {
+        lastRange = selection.getRangeAt(0).cloneRange();
+      }
+    }
+
     floatingButton.style.display = 'flex';
     floatingButton.style.left = `${x + 10}px`;
     floatingButton.style.top = `${y - 40}px`;
@@ -179,18 +189,20 @@
   function showCaptureModal() {
     if (!captureModal) createCaptureModal();
 
-    const selection = window.getSelection();
-    const text = selection.toString().trim();
-    if (!text) return;
-
-    lastSelection = text;
-    // Store the range for visual highlighting later
-    if (selection.rangeCount > 0) {
-      lastRange = selection.getRangeAt(0).cloneRange();
+    // Use stored selection (saved when floating button appeared)
+    // This prevents the bug where clicking the button deselects the text
+    if (!lastSelection) {
+      const selection = window.getSelection();
+      const text = selection.toString().trim();
+      if (!text) return;
+      lastSelection = text;
+      if (selection.rangeCount > 0) {
+        lastRange = selection.getRangeAt(0).cloneRange();
+      }
     }
     hideFloatingButton();
 
-    captureModal.querySelector('#saturno-preview').textContent = selection;
+    captureModal.querySelector('#saturno-preview').textContent = lastSelection;
     captureModal.querySelector('#saturno-tags').value = '';
     captureModal.querySelectorAll('.saturno-color-btn').forEach((b, i) => {
       b.classList.toggle('active', i === 0);

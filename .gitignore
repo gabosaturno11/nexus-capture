@@ -1,0 +1,5 @@
+transcripts/
+recordings/
+offline-captures.txt
+capture.log
+.DS_Store
