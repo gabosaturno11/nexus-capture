@@ -312,6 +312,13 @@ function openAstra() {
 
 // Load voices
 speechSynthesis.getVoices();
+
+// ASTRA Connector — pings ASTRA backend to register nexus-capture
+(function(){
+  fetch(API+'/api/repos',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({repoId:'nexus-capture',status:'online',message:'NEXUS floating bar loaded'})
+  }).catch(function(){});
+})();
 </script>
 </body>
 </html>
