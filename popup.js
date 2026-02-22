@@ -2,7 +2,7 @@
 // NEXUS CAPTURE - Popup Script
 // ═══════════════════════════════════════════════════════════════
 
-const NEXUS_URL = 'https://gabosaturno11.github.io/titan-forge/nexus.html';
+const NEXUS_URL = 'https://astra-command-center-sigma.vercel.app';
 const API_URL = 'https://astra-command-center-sigma.vercel.app';
 
 // Category colors
