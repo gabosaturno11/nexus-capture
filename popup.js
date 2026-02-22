@@ -34,7 +34,8 @@ async function loadSettings() {
     'notionToken',
     'notionDatabaseId',
     'nexusEnabled',
-    'notionEnabled'
+    'notionEnabled',
+    'astraPassword'
   ]);
 
   // Toggles
@@ -43,6 +44,11 @@ async function loadSettings() {
 
   nexusToggle.classList.toggle('active', settings.nexusEnabled !== false);
   notionToggle.classList.toggle('active', settings.notionEnabled === true);
+
+  // ASTRA password
+  if (settings.astraPassword) {
+    document.getElementById('astra-password').value = settings.astraPassword;
+  }
 
   // Notion fields
   if (settings.notionToken) {
@@ -55,6 +61,7 @@ async function loadSettings() {
 
 async function saveSettings() {
   const settings = {
+    astraPassword: document.getElementById('astra-password').value.trim(),
     notionToken: document.getElementById('notion-token').value.trim(),
     notionDatabaseId: document.getElementById('notion-db').value.trim(),
     nexusEnabled: document.getElementById('toggle-nexus').classList.contains('active'),
@@ -149,7 +156,8 @@ function setupEventListeners() {
     });
   });
 
-  // Notion inputs (save on blur)
+  // Settings inputs (save on blur)
+  document.getElementById('astra-password').addEventListener('blur', saveSettings);
   document.getElementById('notion-token').addEventListener('blur', saveSettings);
   document.getElementById('notion-db').addEventListener('blur', saveSettings);
 

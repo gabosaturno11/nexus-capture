@@ -49,6 +49,20 @@ chrome.runtime.onInstalled.addListener(() => {
     contexts: ['selection']
   });
 
+  chrome.contextMenus.create({
+    id: 'saturno-capture-book',
+    parentId: 'saturno-capture',
+    title: 'As Book',
+    contexts: ['selection']
+  });
+
+  chrome.contextMenus.create({
+    id: 'saturno-capture-research',
+    parentId: 'saturno-capture',
+    title: 'As Research',
+    contexts: ['selection']
+  });
+
   // TTS: Create Sound from highlighted text
   chrome.contextMenus.create({
     id: 'saturno-create-sound',
@@ -143,7 +157,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // ===============================================================
 
 async function captureSelection(data) {
-  const settings = await chrome.storage.sync.get(['notionToken', 'notionDatabaseId', 'nexusEnabled', 'notionEnabled']);
+  const settings = await chrome.storage.sync.get(['notionToken', 'notionDatabaseId', 'nexusEnabled', 'notionEnabled', 'astraPassword']);
 
   const capture = {
     id: Date.now(),
@@ -163,7 +177,7 @@ async function captureSelection(data) {
 
   if (settings.nexusEnabled !== false) {
     try {
-      results.nexus = await sendToNexus(capture);
+      results.nexus = await sendToNexus(capture, settings.astraPassword);
     } catch (error) {
       results.nexus = { error: error.message };
     }
@@ -183,10 +197,14 @@ async function captureSelection(data) {
   return results;
 }
 
-async function sendToNexus(capture) {
+async function sendToNexus(capture, astraPassword) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (astraPassword) {
+    headers['Authorization'] = `Bearer ${astraPassword}`;
+  }
   const response = await fetch(`${NEXUS_API}/api/capture`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: headers,
     body: JSON.stringify(capture)
   });
 
