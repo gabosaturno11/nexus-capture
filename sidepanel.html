@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --bg:#050508;--bg2:#0a0a0e;--bg3:#111118;--border:rgba(255,255,255,0.06);
+      --accent:#4ade80;--cyan:#00ffcc;--gold:#d4af37;--purple:#a855f7;
+      --red:#ef4444;--blue:#3b82f6;--orange:#f97316;--pink:#ec4899;
+      --text:#e4e4e7;--dim:#71717a;--muted:#3f3f46;
+    }
+    body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);font-size:11px;line-height:1.5;overflow-x:hidden;}
+    .header{padding:10px 12px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+    .logo{font-size:10px;font-weight:700;letter-spacing:0.1em;}
+    .logo span{color:var(--cyan);}
+    .status-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;}
+    .status-dot.off{background:var(--red);}
+    .section{padding:10px 12px;border-bottom:1px solid var(--border);}
+    .section-title{font-size:8px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;}
+    .input-row{display:flex;gap:6px;align-items:center;}
+    .input-main{flex:1;padding:8px 10px;font-size:11px;font-family:inherit;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;outline:none;}
+    .input-main:focus{border-color:var(--cyan);}
+    .input-main::placeholder{color:var(--muted);}
+    .btn{padding:6px 10px;font-size:9px;font-family:inherit;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;border:none;border-radius:4px;cursor:pointer;transition:all 0.15s;}
+    .btn-primary{background:var(--cyan);color:var(--bg);}
+    .btn-primary:hover{background:#fff;}
+    .btn-ghost{background:none;border:1px solid var(--border);color:var(--dim);}
+    .btn-ghost:hover{border-color:var(--cyan);color:var(--cyan);}
+    .btn-icon{padding:6px 8px;background:none;border:1px solid var(--border);color:var(--dim);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .btn-icon:hover{border-color:var(--cyan);color:var(--cyan);}
+    .btn-icon.recording{color:var(--red);border-color:var(--red);animation:pulse 1s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+    .type-tabs{display:flex;gap:4px;margin-bottom:8px;}
+    .type-tab{padding:3px 8px;font-size:8px;font-family:inherit;border-radius:10px;border:1px solid var(--border);background:none;color:var(--dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.05em;}
+    .type-tab.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,255,204,0.06);}
+    .capture-list{max-height:calc(100vh - 280px);overflow-y:auto;}
+    .capture-item{padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:border-color 0.15s;}
+    .capture-item:hover{border-color:var(--cyan);}
+    .capture-text{font-size:10px;color:var(--dim);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+    .capture-meta{display:flex;gap:6px;align-items:center;margin-top:6px;font-size:8px;color:var(--muted);}
+    .cat-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+    .cat-idea{background:var(--cyan);}
+    .cat-quote{background:var(--gold);}
+    .cat-code{background:var(--purple);}
+    .cat-insight{background:var(--accent);}
+    .cat-todo{background:var(--red);}
+    .cat-book{background:var(--blue);}
+    .cat-research{background:var(--orange);}
+    .cat-thought{background:var(--pink);}
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+    .stat-box{text-align:center;padding:8px 4px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;}
+    .stat-num{font-size:16px;font-weight:700;color:var(--cyan);}
+    .stat-label{font-size:7px;text-transform:uppercase;color:var(--muted);margin-top:2px;}
+    .empty{text-align:center;padding:20px;color:var(--muted);font-size:10px;}
+    textarea.input-main{resize:vertical;min-height:60px;}
+    .quick-actions{display:flex;gap:4px;flex-wrap:wrap;}
+    .quick-actions .btn{font-size:8px;padding:4px 8px;}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">NEXUS <span>CAPTURE</span></div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span class="status-dot" id="sp-status"></span>
+      <span style="font-size:8px;color:var(--muted)" id="sp-status-text">...</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Quick Capture</div>
+    <div class="type-tabs" id="sp-type-tabs">
+      <button class="type-tab active" data-type="idea">Idea</button>
+      <button class="type-tab" data-type="quote">Quote</button>
+      <button class="type-tab" data-type="book">Book</button>
+      <button class="type-tab" data-type="code">Code</button>
+      <button class="type-tab" data-type="todo">Todo</button>
+      <button class="type-tab" data-type="research">Research</button>
+    </div>
+    <div class="input-row">
+      <textarea class="input-main" id="sp-input" placeholder="Type or paste content..." rows="2"></textarea>
+    </div>
+    <div class="input-row" style="margin-top:6px;">
+      <button class="btn-icon" id="sp-mic" title="Voice capture">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+      </button>
+      <button class="btn btn-primary" id="sp-save" style="flex:1">Capture</button>
+      <button class="btn btn-ghost" id="sp-open-astra">ASTRA</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Quick Actions</div>
+    <div class="quick-actions">
+      <button class="btn btn-ghost" id="sp-grab-page">Grab Page</button>
+      <button class="btn btn-ghost" id="sp-grab-selection">Grab Selection</button>
+      <button class="btn btn-ghost" id="sp-grab-url">Save URL</button>
+      <button class="btn btn-ghost" id="sp-sync">Sync</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div class="section-title" style="margin:0">Recent Captures</div>
+      <span style="font-size:8px;color:var(--muted)" id="sp-count">0</span>
+    </div>
+    <div class="stats-row" id="sp-stats">
+      <div class="stat-box"><div class="stat-num" id="sp-today">0</div><div class="stat-label">Today</div></div>
+      <div class="stat-box"><div class="stat-num" id="sp-week">0</div><div class="stat-label">Week</div></div>
+      <div class="stat-box"><div class="stat-num" id="sp-book">0</div><div class="stat-label">Book</div></div>
+      <div class="stat-box"><div class="stat-num" id="sp-total">0</div><div class="stat-label">Total</div></div>
+    </div>
+    <div class="capture-list" id="sp-list" style="margin-top:8px;">
+      <div class="empty">No captures yet</div>
+    </div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

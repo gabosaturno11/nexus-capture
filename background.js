@@ -63,6 +63,13 @@ chrome.runtime.onInstalled.addListener(() => {
     contexts: ['selection']
   });
 
+  // Open side panel
+  chrome.contextMenus.create({
+    id: 'saturno-sidepanel',
+    title: 'Open NEXUS Sidebar',
+    contexts: ['page', 'selection']
+  });
+
   // TTS: Create Sound from highlighted text
   chrome.contextMenus.create({
     id: 'saturno-create-sound',
@@ -80,11 +87,23 @@ chrome.runtime.onInstalled.addListener(() => {
     }
   });
 
+  // Enable side panel opening via action click
+  if (chrome.sidePanel) {
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => {});
+  }
+
   console.log('NEXUS CAPTURE installed');
 });
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'saturno-sidepanel') {
+    if (chrome.sidePanel) {
+      chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
+    }
+    return;
+  }
+
   if (info.menuItemId === 'saturno-create-sound') {
     // TTS: send selected text to content script for speech
     chrome.tabs.sendMessage(tab.id, {
